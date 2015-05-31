@@ -19,15 +19,16 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-// This package defines the basic functionality of gonode.
+// Package gonodepkg defines the basic functionality of gonode.
 package gonodepkg
 
 import (
-	json "github.com/jgranstrom/go-simplejson"
-	"bufio"	
+	"bufio"
 	"fmt"
 	"io"
 	"os"
+
+	json "github.com/biblioclasta/go-simplejson"
 )
 
 // Signal constants - internal
@@ -49,11 +50,10 @@ func Start(proc Processor) {
 		if err != nil {
 			if err == io.EOF { // Return if stream closes
 				return
-			} else {
-				// Write back any stream errors directly to be dispatched by gonode error event
-				fmt.Println(err)
-				continue
 			}
+			// Write back any stream errors directly to be dispatched by gonode error event
+			fmt.Println(err)
+			continue
 		}
 		if len(s) < 1 { // Skip empty entries
 			continue
@@ -90,9 +90,15 @@ func Start(proc Processor) {
 // Handle a command by invoking processor and send result on stdout
 func handle(id int, cmd *json.Json, proc Processor) {
 	// Create a response with the matching ID
-	r, dat := json.MakeMap()
+	r, dat, err := json.MakeMap()
+	if err != nil {
+		fmt.Println(err)
+	}
 	dat["id"] = id
-	dat["data"] = proc(cmd) // Set response data to processor result	
-	b, _ := r.Encode()
+	dat["data"] = proc(cmd) // Set response data to processor result
+	b, err := r.Encode()
+	if err != nil {
+		fmt.Println(err)
+	}
 	fmt.Println(string(b)) // Send JSON result on stdout
 }
